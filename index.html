@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BOBM · Line Overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  /* ============================================================
+     TOKENS
+     ============================================================ */
+  :root {
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --panel-2: #fafbfc;
+
+    --ink:   #0f172a;
+    --ink-2: #334155;
+    --ink-3: #64748b;
+    --ink-4: #94a3b8;
+
+    --line:   #e8ebef;
+    --line-2: #d1d5db;
+    --line-soft: #f1f3f5;
+
+    --c-producing: #22c55e;
+    --c-tech:      #ef4444;
+    --c-blocked:   #f59e0b;
+    --c-starved:   #3b82f6;
+    --c-indirect:  #c2410c;
+    --c-dressing:  #ec4899;
+    --c-manual:    #94a3b8;
+    --c-off:       #475569;
+    --c-missing:   #06b6d4;
+
+    --shadow-xs: 0 1px 0 rgba(15,23,42,.025);
+
+    --radius:    10px;
+    --radius-sm: 6px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "DM Sans", system-ui, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  .shell { padding: 24px 28px 60px; max-width: 1480px; margin: 0 auto; }
+
+  /* ============================================================
+     TOPBAR
+     ============================================================ */
+  .topbar {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 24px;
+    align-items: center;
+    margin-bottom: 18px;
+  }
+  .brand-eyebrow {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px; font-weight: 500;
+    letter-spacing: .22em; color: var(--ink-3);
+    text-transform: uppercase;
+  }
+  .brand-title {
+    font-family: "Space Mono", monospace;
+    font-weight: 700;
+    font-size: 26px;
+    letter-spacing: .12em;
+    line-height: 1;
+    margin: 4px 0 0;
+    color: var(--ink);
+  }
+  .topbar-counts {
+    display: flex; gap: 28px; align-items: baseline;
+  }
+  .topbar-counts .cnt { display: flex; align-items: baseline; gap: 8px; }
+  .topbar-counts .cnt .n {
+    font-family: "Space Mono", monospace;
+    font-weight: 700; font-size: 22px; line-height: 1;
+  }
+  .topbar-counts .cnt .l {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px; font-weight: 500;
+    letter-spacing: .18em; color: var(--ink-3);
+    text-transform: uppercase;
+  }
+  .cnt.in  .n { color: var(--c-producing); }
+  .cnt.off .n { color: var(--c-tech); }
+  .cnt.tot .n { color: var(--ink); }
+  .topbar-counts .sep {
+    width: 1px; align-self: stretch; background: var(--line);
+  }
+
+  /* ============================================================
+     SWITCHER
+     ============================================================ */
+  .switcher {
+    display: inline-flex; gap: 4px; padding: 4px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    margin-bottom: 14px;
+  }
+  .switcher button {
+    border: 0; background: transparent; cursor: pointer;
+    padding: 7px 16px; border-radius: 999px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px; font-weight: 500; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--ink-3);
+    transition: all .15s ease;
+  }
+  .switcher button.active {
+    background: var(--ink); color: #fff;
+  }
+  .switcher button:not(.active):hover { color: var(--ink); }
+
+  /* ============================================================
+     CONTROLS BAR (filters + legend)
+     ============================================================ */
+  .controls {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-xs);
+    margin-bottom: 18px;
+    overflow: visible;
+  }
+  .filters-row {
+    display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;
+    padding: 14px 16px;
+  }
+  .filter-group {
+    display: flex; flex-direction: column; gap: 5px;
+    position: relative;
+  }
+  .filter-group .lbl {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px; font-weight: 500;
+    letter-spacing: .18em; color: var(--ink-3);
+    text-transform: uppercase;
+  }
+  .filters-row .spacer { flex: 1; }
+  .filters-row .updated {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 11px; color: var(--ink-3); letter-spacing: .04em;
+    align-self: center;
+  }
+  .filters-row .updated strong { color: var(--ink); font-weight: 700; }
+
+  /* legend strip */
+  .legend-strip {
+    display: flex; gap: 22px; flex-wrap: wrap;
+    padding: 12px 16px;
+    border-top: 1px solid var(--line-soft);
+    background: var(--panel-2);
+    border-bottom-left-radius: var(--radius);
+    border-bottom-right-radius: var(--radius);
+  }
+  .legend-strip .lstrip-head {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px; letter-spacing: .22em; color: var(--ink-3);
+    text-transform: uppercase;
+    align-self: center;
+  }
+  .leg {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 11px; color: var(--ink-2);
+  }
+  .leg .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .leg .num {
+    font-family: "Space Mono", monospace;
+    font-weight: 700; font-size: 12px; color: var(--ink);
+  }
+  .leg .name {
+    font-family: "DM Sans", sans-serif;
+    font-weight: 500;
+  }
+
+  /* ============================================================
+     MULTI-SELECT
+     ============================================================ */
+  .ms { position: relative; min-width: 220px; }
+  .ms-trigger {
+    width: 100%;
+    display: flex; align-items: center; gap: 8px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--panel);
+    padding: 9px 10px 9px 14px;
+    font-family: "DM Sans", sans-serif;
+    font-size: 13px; font-weight: 500;
+    color: var(--ink); cursor: pointer;
+    text-align: left;
+    transition: border-color .12s ease;
+  }
+  .ms-trigger:hover { border-color: var(--line-2); }
+  .ms.open .ms-trigger {
+    border-color: var(--ink-2);
+    box-shadow: 0 0 0 3px rgba(59,130,246,.1);
+  }
+  .ms-trigger .ms-label {
+    flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .ms-trigger .ms-badge {
+    background: var(--ink); color: #fff;
+    font-family: "Space Mono", monospace;
+    font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 999px;
+    line-height: 1;
+  }
+  .ms-trigger .ms-caret {
+    color: var(--ink-3); font-size: 9px;
+    transition: transform .15s ease;
+  }
+  .ms.open .ms-caret { transform: rotate(180deg); }
+
+  .ms-panel {
+    position: absolute; top: calc(100% + 6px); left: 0;
+    width: 100%; min-width: 260px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 8px 28px -6px rgba(15,23,42,.18), 0 2px 4px rgba(15,23,42,.06);
+    z-index: 50;
+    max-height: 360px; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .ms-panel.hidden { display: none; }
+  .ms-actions {
+    display: flex; gap: 4px;
+    padding: 6px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .ms-actions button {
+    flex: 1;
+    border: 0; background: var(--panel-2);
+    padding: 7px; border-radius: 4px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--ink-3);
+    cursor: pointer;
+    transition: all .12s ease;
+  }
+  .ms-actions button:hover { background: var(--line); color: var(--ink); }
+
+  .ms-options { overflow-y: auto; padding: 4px; }
+  .ms-group-label {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px; letter-spacing: .18em;
+    color: var(--ink-3); text-transform: uppercase;
+    padding: 8px 10px 4px;
+  }
+  .ms-option {
+    display: flex; align-items: center; gap: 10px;
+    padding: 7px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: "DM Sans", sans-serif;
+    font-size: 13px; color: var(--ink-2);
+    user-select: none;
+  }
+  .ms-option:hover { background: var(--panel-2); }
+  .ms-option .check {
+    width: 16px; height: 16px;
+    border: 1.5px solid var(--line-2);
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    background: var(--panel);
+    transition: all .12s ease;
+  }
+  .ms-option.selected .check {
+    background: var(--c-producing);
+    border-color: var(--c-producing);
+  }
+  .ms-option.selected .check::after {
+    content: '';
+    width: 8px; height: 4px;
+    border: 2px solid #fff;
+    border-top: 0; border-right: 0;
+    transform: rotate(-45deg) translate(0, -1px);
+  }
+  .ms-option.selected { color: var(--ink); font-weight: 600; }
+  .ms-option .swatch {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ============================================================
+     LINE CARD (one card per line, no fragmentation)
+     ============================================================ */
+  .line-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-xs);
+    margin-bottom: 14px;
+  }
+  .line-card.hidden { display: none; }
+
+  .line-card-head {
+    display: flex; flex-wrap: wrap;
+    align-items: center;
+    gap: 24px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+
+  .line-title {
+    display: flex; align-items: center; gap: 12px;
+    font-family: "Space Mono", monospace;
+    font-weight: 700; font-size: 15px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink);
+    min-width: 180px;
+  }
+  .line-title::before {
+    content: '';
+    width: 3px; height: 18px;
+    background: var(--health-color, var(--c-producing));
+    border-radius: 2px;
+    transition: background-color .3s ease;
+  }
+  .line-card.h-degraded .line-title::before { background: var(--c-tech); }
+  .line-card.h-critical .line-title::before { background: var(--c-tech); }
+
+  .kpis-inline {
+    display: flex; gap: 18px;
+    flex: 1;
+  }
+  .kpi-inline {
+    display: flex; align-items: baseline; gap: 7px;
+  }
+  .kpi-inline .num {
+    font-family: "Space Mono", monospace;
+    font-size: 18px; font-weight: 700; line-height: 1;
+    color: var(--c, var(--ink));
+  }
+  .kpi-inline .name {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px; letter-spacing: .14em;
+    color: var(--ink-3); text-transform: uppercase;
+  }
+  .kpi-inline.kpi-producing   { --c: var(--c-producing); }
+  .kpi-inline.kpi-disturbance { --c: var(--c-tech); }
+  .kpi-inline.kpi-waiting     { --c: var(--c-blocked); }
+  .kpi-inline.kpi-off         { --c: var(--c-manual); }
+
+  .line-status-inline {
+    display: flex; align-items: center; gap: 8px;
+    font-family: "DM Sans", sans-serif;
+    font-size: 12px; font-weight: 600;
+    color: var(--health-color, var(--c-producing));
+  }
+  .line-status-inline .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: currentColor;
+  }
+  .line-card.h-operational { --health-color: var(--c-producing); }
+  .line-card.h-degraded    { --health-color: var(--c-tech); }
+  .line-card.h-critical    { --health-color: var(--c-tech); }
+  .line-card.h-degraded .line-status-inline .dot,
+  .line-card.h-critical .line-status-inline .dot {
+    animation: pulse-dot 1.6s infinite;
+  }
+  @keyframes pulse-dot {
+    0%   { box-shadow: 0 0 0 0 rgba(239,68,68,.55); }
+    70%  { box-shadow: 0 0 0 7px rgba(239,68,68,0); }
+    100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); }
+  }
+
+  .uptime-inline {
+    font-family: "Space Mono", monospace;
+    font-size: 13px; font-weight: 700;
+    color: var(--ink-2); letter-spacing: .04em;
+  }
+  .uptime-inline small {
+    font-family: "JetBrains Mono", monospace;
+    color: var(--ink-3); font-weight: 500;
+    font-size: 9px; letter-spacing: .18em;
+    margin-left: 7px;
+  }
+
+  /* tiles area */
+  .line-card-body { padding: 14px 18px; }
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 8px;
+  }
+  @media (max-width: 1280px) { .tiles { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 720px)  { .tiles { grid-template-columns: repeat(2, 1fr); } }
+
+  /* ============================================================
+     STATION TILE (flatter, cleaner)
+     ============================================================ */
+  .tile {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+    position: relative;
+  }
+  .tile:hover {
+    transform: translateY(-1px);
+    border-color: var(--line-2);
+    box-shadow: 0 4px 12px -4px rgba(15,23,42,.08);
+  }
+  .tile.dim { opacity: .25; pointer-events: none; }
+
+  .tile-id {
+    text-align: center;
+    font-family: "Space Mono", monospace;
+    font-weight: 700; font-size: 15px;
+    letter-spacing: .04em;
+    padding: 11px 8px 0;
+    color: var(--ink);
+  }
+  .tile-op {
+    text-align: center;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px; color: var(--ink-3);
+    letter-spacing: .04em;
+    padding: 2px 8px 9px;
+  }
+  .tile-rows { border-top: 1px solid var(--line-soft); }
+  .tile-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 5px 12px;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+  }
+  .tile-row + .tile-row { border-top: 1px solid var(--line-soft); }
+  .tile-row .k {
+    color: var(--ink-3);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  .tile-row .v {
+    font-family: "Space Mono", monospace;
+    font-size: 11px; font-weight: 700; color: var(--ink);
+  }
+  .tile-row .v .unit {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 9px; color: var(--ink-3); font-weight: 500; margin-left: 2px;
+  }
+  .tile-row .v .good  { color: var(--c-producing); }
+  .tile-row .v .bad   { color: var(--c-tech); }
+  .tile-row .v .slash { color: var(--ink-4); margin: 0 3px; font-weight: 400; }
+
+  .tile-status {
+    padding: 7px 6px;
+    color: #fff;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: .22em;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .st-producing { background: var(--c-producing); }
+  .st-tech      { background: var(--c-tech); }
+  .st-blocked   { background: var(--c-blocked); }
+  .st-starved   { background: var(--c-starved); }
+  .st-indirect  { background: var(--c-indirect); }
+  .st-dressing  { background: var(--c-dressing); }
+  .st-manual    { background: var(--c-manual); }
+  .st-off       { background: var(--c-off); }
+  .st-missing   { background: var(--c-missing); }
+
+  .tile.live::before {
+    content: ''; position: absolute; top: 9px; right: 9px;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--c-producing);
+    box-shadow: 0 0 0 0 rgba(34,197,94,.6);
+    animation: pulse-live 1.6s infinite;
+  }
+  @keyframes pulse-live {
+    0%   { box-shadow: 0 0 0 0 rgba(34,197,94,.55); }
+    70%  { box-shadow: 0 0 0 7px rgba(34,197,94,0); }
+    100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+  }
+
+  /* ============================================================
+     AMR / AGV
+     ============================================================ */
+  .amr-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 1100px) { .amr-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px)  { .amr-grid { grid-template-columns: 1fr; } }
+
+  .amr-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow-xs);
+    display: flex; flex-direction: column; gap: 12px;
+    position: relative; overflow: hidden;
+  }
+  .amr-card::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+  }
+  .amr-card.s-active::before  { background: var(--c-producing); }
+  .amr-card.s-charge::before  { background: var(--c-missing); }
+  .amr-card.s-idle::before    { background: var(--c-manual); }
+  .amr-card.s-fault::before   { background: var(--c-tech); }
+
+  .amr-head { display: flex; justify-content: space-between; align-items: baseline; }
+  .amr-head .name {
+    font-family: "Space Mono", monospace;
+    font-weight: 700; font-size: 18px; letter-spacing: .08em;
+  }
+  .amr-head .typ {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px; color: var(--ink-3); letter-spacing: .14em;
+  }
+  .amr-rows { border-top: 1px solid var(--line-soft); }
+  .amr-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 6px 0;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px;
+  }
+  .amr-row + .amr-row { border-top: 1px solid var(--line-soft); }
+  .amr-row .k { color: var(--ink-3); letter-spacing: .12em; text-transform: uppercase; }
+  .amr-row .v {
+    font-family: "Space Mono", monospace;
+    font-size: 11px; font-weight: 700; color: var(--ink);
+  }
+
+  .battery-row { display: flex; flex-direction: column; gap: 5px; }
+  .battery-row .top {
+    display: flex; justify-content: space-between;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px; color: var(--ink-3); letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  .battery-row .top strong { color: var(--ink); font-weight: 700; font-family: "Space Mono", monospace; }
+  .battery {
+    height: 6px; background: var(--line); border-radius: 4px; overflow: hidden;
+  }
+  .battery > span {
+    display: block; height: 100%; border-radius: 4px;
+    background: var(--c-producing);
+    transition: width .3s ease;
+  }
+  .battery.low > span { background: var(--c-tech); }
+
+  .amr-foot {
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--ink-3);
+    border-top: 1px dashed var(--line);
+    padding-top: 9px;
+  }
+  .amr-foot .state { font-weight: 700; }
+  .s-active .amr-foot .state  { color: var(--c-producing); }
+  .s-charge .amr-foot .state  { color: var(--c-missing); }
+  .s-idle .amr-foot .state    { color: var(--ink-3); }
+  .s-fault .amr-foot .state   { color: var(--c-tech); }
+
+  .view.hidden { display: none; }
+
+  .footnote {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 10px; color: var(--ink-4); letter-spacing: .14em;
+    text-align: center; margin-top: 22px;
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- =========== TOPBAR =========== -->
+  <header class="topbar">
+    <div>
+      <div class="brand-eyebrow">BOBM · Production Dashboard</div>
+      <h1 class="brand-title">LINE OVERVIEW</h1>
+    </div>
+    <div class="topbar-counts">
+      <div class="cnt in"><div class="n" id="c-in">0</div><div class="l">In Cycle</div></div>
+      <div class="sep"></div>
+      <div class="cnt off"><div class="n" id="c-off">0</div><div class="l">Off Cycle</div></div>
+      <div class="sep"></div>
+      <div class="cnt tot"><div class="n" id="c-tot">0</div><div class="l">Total</div></div>
+    </div>
+  </header>
+
+  <!-- =========== VIEW SWITCHER =========== -->
+  <div class="switcher" role="tablist">
+    <button class="active" data-view="lines">Production Lines</button>
+    <button data-view="amr">AMR / AGV Dashboard</button>
+  </div>
+
+  <!-- =========== LINES VIEW =========== -->
+  <section class="view" id="view-lines">
+
+    <div class="controls">
+      <div class="filters-row">
+        <div class="filter-group">
+          <span class="lbl">Line</span>
+          <div class="ms" id="ms-line"></div>
+        </div>
+        <div class="filter-group">
+          <span class="lbl">Station</span>
+          <div class="ms" id="ms-station"></div>
+        </div>
+        <div class="filter-group">
+          <span class="lbl">Status</span>
+          <div class="ms" id="ms-status"></div>
+        </div>
+        <div class="spacer"></div>
+        <div class="updated">SHIFT <strong>A</strong> · UPDATED <strong id="last-update">--:--:--</strong></div>
+      </div>
+      <div class="legend-strip" id="legend-strip">
+        <div class="lstrip-head">Live Counts</div>
+      </div>
+    </div>
+
+    <div id="lines-container"></div>
+  </section>
+
+  <!-- =========== AMR / AGV VIEW =========== -->
+  <section class="view hidden" id="view-amr">
+    <div class="controls">
+      <div class="filters-row">
+        <div class="filter-group">
+          <span class="lbl">Vehicle Type</span>
+          <div class="ms" id="ms-amr-type"></div>
+        </div>
+        <div class="filter-group">
+          <span class="lbl">State</span>
+          <div class="ms" id="ms-amr-state"></div>
+        </div>
+        <div class="spacer"></div>
+        <div class="updated">FLEET HEALTH <strong id="fleet-health">--%</strong></div>
+      </div>
+    </div>
+    <div class="amr-grid" id="amr-grid"></div>
+  </section>
+
+  <div class="footnote">BOBM · MES LIVE FEED · v2.4 · TICK 1.0s</div>
+</div>
+
+<script>
+/* ============================================================
+   DATA MODEL
+   ============================================================ */
+const STATUSES = [
+  { key:'producing', label:'Production in Cycle',  short:'PRODUCING',         cls:'st-producing', off:false, group:'producing'   },
+  { key:'tech',      label:'Technical Disturbance',short:'TECH FAULT',        cls:'st-tech',      off:true,  group:'disturbance' },
+  { key:'blocked',   label:'Blocked',              short:'BLOCKED',           cls:'st-blocked',   off:true,  group:'waiting'     },
+  { key:'starved',   label:'Starved',              short:'STARVED',           cls:'st-starved',   off:true,  group:'waiting'     },
+  { key:'indirect',  label:'Indirect Disturbance', short:'INDIRECT',          cls:'st-indirect',  off:true,  group:'disturbance' },
+  { key:'dressing',  label:'Dressing Cycle',       short:'DRESSING',          cls:'st-dressing',  off:false, group:'producing'   },
+  { key:'manual',    label:'Manual / No Production', short:'MANUAL',          cls:'st-manual',    off:true,  group:'off'         },
+  { key:'off',       label:'Machine Off',          short:'MACHINE OFF',       cls:'st-off',       off:true,  group:'off'         },
+  { key:'missing',   label:'Component Missing',    short:'COMPONENT MISSING', cls:'st-missing',   off:true,  group:'disturbance' }
+];
+
+const LINE_STATIONS = {
+  tray: [
+    { id:'TR1010',   op:'TY1000.1010TR.01A', name:'Frame Weld' },
+    { id:'TR1020',   op:'TY1000.1020TR.01A', name:'Coolant Insert' },
+    { id:'TR1030',   op:'TY1000.1030TR.01A', name:'Sealant Apply' },
+    { id:'TR1040_A', op:'TY1000.1040TR.01A', name:'Leak Test A' },
+    { id:'TR1040_B', op:'TY1000.1040TR.03A', name:'Leak Test B' },
+    { id:'TR1050',   op:'TY1000.1050TR.01A', name:'Bus Bar Mount' },
+    { id:'TR1060',   op:'TY1000.1060TR.01A', name:'BMS Pre-Mount' },
+    { id:'TR1070',   op:'TY1000.1070TR.01A', name:'Tray Inspect' }
+  ],
+  cell: [
+    { id:'CM2010',   op:'CL1000.2010CM.01A', name:'Cell Load' },
+    { id:'CM2020',   op:'CL1000.2020CM.01A', name:'Cell Inspect' },
+    { id:'CM2030_A', op:'CL1000.2030CM.01A', name:'Wire Bond A' },
+    { id:'CM2030_B', op:'CL1000.2030CM.03A', name:'Wire Bond B' },
+    { id:'CM2040',   op:'CL1000.2040CM.01A', name:'Stack Build' },
+    { id:'CM2050',   op:'CL1000.2050CM.01A', name:'Voltage Test' },
+    { id:'CM2060',   op:'CL1000.2060CM.01A', name:'Module Pack' },
+    { id:'CM2070',   op:'CL1000.2070CM.01A', name:'Matrix Cure' }
+  ],
+  pack: [
+    { id:'PF3010',   op:'PK1000.3010PF.01A', name:'Module Place' },
+    { id:'PF3020',   op:'PK1000.3020PF.01A', name:'Tray Mate' },
+    { id:'PF3030',   op:'PK1000.3030PF.01A', name:'HV Connect' },
+    { id:'PF3040',   op:'PK1000.3040PF.01A', name:'BMS Bind' },
+    { id:'PF3050_A', op:'PK1000.3050PF.01A', name:'EOL Test A' },
+    { id:'PF3050_B', op:'PK1000.3050PF.03A', name:'EOL Test B' },
+    { id:'PF3060',   op:'PK1000.3060PF.01A', name:'Cover Seal' },
+    { id:'PF3070',   op:'PK1000.3070PF.01A', name:'Final QA' }
+  ]
+};
+
+const LINES = [
+  { key:'tray', name:'Tray Sub-Assembly',   uptimeStart: Date.now() - (3*3600+21*60+29)*1000 },
+  { key:'cell', name:'Cell to Matrix',      uptimeStart: Date.now() - (2*3600+47*60+11)*1000 },
+  { key:'pack', name:'Pack Final Assembly', uptimeStart: Date.now() - (5*3600+12*60+ 4)*1000 }
+];
+
+const seedStatuses = {
+  tray: ['producing','producing','manual','indirect','blocked','dressing','starved','producing'],
+  cell: ['tech','manual','blocked','starved','starved','producing','producing','producing'],
+  pack: ['producing','tech','producing','producing','missing','producing','producing','producing']
+};
+
+/* helpers */
+function rand(min, max){ return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pad(n){ return String(n).padStart(2,'0'); }
+function fmtUptime(ms){
+  const s = Math.floor(ms/1000);
+  return `${pad(Math.floor(s/3600))}:${pad(Math.floor(s/60)%60)}:${pad(s%60)}`;
+}
+function fmtClockHM(d){ return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
+function statusByKey(k){ return STATUSES.find(s => s.key === k); }
+
+/* build STATIONS */
+const STATIONS = [];
+LINES.forEach(line => {
+  LINE_STATIONS[line.key].forEach((s, i) => {
+    STATIONS.push({
+      uid: `${line.key}-${s.id}`,
+      line: line.key,
+      lineName: line.name,
+      id: s.id, op: s.op, name: s.name,
+      status: seedStatuses[line.key][i],
+      cycle: rand(28, 62) + Math.random(),
+      good:  rand(180, 340),
+      bad:   rand(0, 6)
+    });
+  });
+});
+
+/* AMR / AGV fleet */
+const FLEET = [
+  { id:'AMR-01', type:'AMR',      task:'TRAY → CELL',  battery: 82, state:'active'   , speed:1.4, payload:'12.4 kg', loc:'BAY-A3'  },
+  { id:'AMR-02', type:'AMR',      task:'IDLE',         battery: 41, state:'idle'     , speed:0.0, payload:'0.0 kg',  loc:'PARK-2'  },
+  { id:'AMR-03', type:'AMR',      task:'PACK → DOCK',  battery: 67, state:'active'   , speed:1.2, payload:'18.7 kg', loc:'AISLE-7' },
+  { id:'AGV-11', type:'AGV',      task:'CHARGING',     battery: 23, state:'charging' , speed:0.0, payload:'0.0 kg',  loc:'CHRG-1'  },
+  { id:'AGV-12', type:'AGV',      task:'CELL → PACK',  battery: 71, state:'active'   , speed:1.0, payload:'21.0 kg', loc:'AISLE-3' },
+  { id:'AGV-13', type:'AGV',      task:'FAULT · E07',  battery: 58, state:'fault'    , speed:0.0, payload:'9.2 kg',  loc:'AISLE-5' },
+  { id:'FLT-04', type:'Forklift', task:'PALLET MOVE',  battery: 88, state:'active'   , speed:0.8, payload:'420 kg',  loc:'DOCK-2'  },
+  { id:'FLT-05', type:'Forklift', task:'IDLE',         battery: 95, state:'idle'     , speed:0.0, payload:'0.0 kg',  loc:'PARK-1'  }
+];
+
+/* ============================================================
+   MULTI-SELECT COMPONENT
+   options: [{ value, label, group?, swatch? }]
+   ============================================================ */
+function makeMultiSelect(host, opts){
+  const state = { selected: new Set() };
+  const config = {
+    placeholder: opts.placeholder || 'Select…',
+    allLabel:    opts.allLabel    || 'All',
+    options:     opts.options     || [],
+    onChange:    opts.onChange    || (() => {}),
+    showSwatch:  !!opts.showSwatch
+  };
+
+  host.classList.add('ms');
+  host.innerHTML = `
+    <button class="ms-trigger" type="button">
+      <span class="ms-label"></span>
+      <span class="ms-badge" style="display:none">0</span>
+      <span class="ms-caret">▾</span>
+    </button>
+    <div class="ms-panel hidden">
+      <div class="ms-actions">
+        <button data-act="all">Select All</button>
+        <button data-act="clear">Clear</button>
+      </div>
+      <div class="ms-options"></div>
+    </div>
+  `;
+  const trigger = host.querySelector('.ms-trigger');
+  const panel   = host.querySelector('.ms-panel');
+  const label   = host.querySelector('.ms-label');
+  const badge   = host.querySelector('.ms-badge');
+
+  function renderOptions(){
+    const wrap = host.querySelector('.ms-options');
+    wrap.innerHTML = '';
+    let lastGroup = null;
+    config.options.forEach(o => {
+      if (o.group && o.group !== lastGroup) {
+        const gh = document.createElement('div');
+        gh.className = 'ms-group-label';
+        gh.textContent = o.group;
+        wrap.appendChild(gh);
+        lastGroup = o.group;
+      }
+      const row = document.createElement('div');
+      row.className = 'ms-option' + (state.selected.has(o.value) ? ' selected' : '');
+      row.dataset.value = o.value;
+      row.innerHTML = `
+        <span class="check"></span>
+        ${config.showSwatch && o.swatch ? `<span class="swatch" style="background:${o.swatch}"></span>` : ''}
+        <span>${o.label}</span>
+      `;
+      row.addEventListener('click', () => toggle(o.value));
+      wrap.appendChild(row);
+    });
+  }
+
+  function toggle(value){
+    if (state.selected.has(value)) state.selected.delete(value);
+    else state.selected.add(value);
+    syncOptions();
+    refreshLabel();
+    config.onChange(getValues());
+  }
+
+  function selectAll(){
+    config.options.forEach(o => state.selected.add(o.value));
+    syncOptions(); refreshLabel(); config.onChange(getValues());
+  }
+  function clearAll(){
+    state.selected.clear();
+    syncOptions(); refreshLabel(); config.onChange(getValues());
+  }
+
+  function syncOptions(){
+    host.querySelectorAll('.ms-option').forEach(el => {
+      el.classList.toggle('selected', state.selected.has(el.dataset.value));
+    });
+  }
+
+  function getValues(){
+    const total = config.options.length;
+    const n = state.selected.size;
+    if (n === 0 || n === total) return null; // null = "all"
+    return Array.from(state.selected);
+  }
+
+  function refreshLabel(){
+    const total = config.options.length;
+    const n = state.selected.size;
+    if (n === 0 || n === total) {
+      label.textContent = config.allLabel;
+      badge.style.display = 'none';
+    } else if (n === 1) {
+      const only = Array.from(state.selected)[0];
+      const opt = config.options.find(o => o.value === only);
+      label.textContent = opt ? opt.label : '1 selected';
+      badge.style.display = 'none';
+    } else {
+      label.textContent = `${n} selected`;
+      badge.textContent = n;
+      badge.style.display = 'inline-block';
+    }
+  }
+
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = !panel.classList.contains('hidden');
+    closeAllPanels();
+    if (!open) {
+      panel.classList.remove('hidden');
+      host.classList.add('open');
+    }
+  });
+  host.querySelector('[data-act="all"]').addEventListener('click', selectAll);
+  host.querySelector('[data-act="clear"]').addEventListener('click', clearAll);
+
+  renderOptions();
+  refreshLabel();
+
+  return {
+    getValues,
+    setOptions(newOptions){
+      config.options = newOptions;
+      state.selected.clear();
+      renderOptions();
+      refreshLabel();
+    },
+    selectedSet: () => state.selected
+  };
+}
+
+function closeAllPanels(){
+  document.querySelectorAll('.ms.open').forEach(el => {
+    el.classList.remove('open');
+    el.querySelector('.ms-panel').classList.add('hidden');
+  });
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.ms')) closeAllPanels();
+});
+
+/* ============================================================
+   PER-LINE METRICS
+   ============================================================ */
+function computeLineKpi(lineKey){
+  const groups = { producing:0, disturbance:0, waiting:0, off:0 };
+  STATIONS.filter(s => s.line === lineKey)
+    .forEach(s => groups[ statusByKey(s.status).group ]++);
+  let health;
+  if (groups.disturbance >= 2)                                                health = 'critical';
+  else if (groups.disturbance >= 1 || groups.waiting >= 2 || groups.off >= 1) health = 'degraded';
+  else                                                                        health = 'operational';
+  return Object.assign({}, groups, { health });
+}
+const HEALTH_LABEL = { operational:'Operational', degraded:'Degraded', critical:'Critical' };
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+const linesContainer = document.getElementById('lines-container');
+
+function renderLines(){
+  linesContainer.innerHTML = '';
+  LINES.forEach(line => {
+    const sec = document.createElement('section');
+    sec.className = 'line-card h-operational';
+    sec.dataset.line = line.key;
+    sec.innerHTML = `
+      <div class="line-card-head">
+        <div class="line-title">${line.name}</div>
+        <div class="kpis-inline" data-kpis="${line.key}">
+          <div class="kpi-inline kpi-producing"><span class="num" data-k="producing">0</span><span class="name">Producing</span></div>
+          <div class="kpi-inline kpi-disturbance"><span class="num" data-k="disturbance">0</span><span class="name">Disturbance</span></div>
+          <div class="kpi-inline kpi-waiting"><span class="num" data-k="waiting">0</span><span class="name">Waiting</span></div>
+          <div class="kpi-inline kpi-off"><span class="num" data-k="off">0</span><span class="name">Off / Manual</span></div>
+        </div>
+        <div class="line-status-inline" data-status-card="${line.key}">
+          <span class="dot"></span><span data-status-label>Operational</span>
+        </div>
+        <div class="uptime-inline"><span data-uptime="${line.key}">00:00:00</span><small>UPTIME</small></div>
+      </div>
+      <div class="line-card-body">
+        <div class="tiles" data-tiles="${line.key}"></div>
+      </div>
+    `;
+    linesContainer.appendChild(sec);
+
+    const wrap = sec.querySelector(`[data-tiles="${line.key}"]`);
+    STATIONS.filter(s => s.line === line.key).forEach(st => renderTile(wrap, st));
+    refreshLineHeader(line.key);
+  });
+}
+
+function renderTile(wrap, st){
+  const stt = statusByKey(st.status);
+  const tile = document.createElement('div');
+  tile.className = `tile${st.status === 'producing' ? ' live' : ''}`;
+  tile.dataset.uid = st.uid;
+  tile.dataset.station = st.id;
+  tile.dataset.line = st.line;
+  tile.dataset.statusKey = st.status;
+  tile.title = `${st.name} · ${st.lineName}`;
+  tile.innerHTML = `
+    <div class="tile-id">${st.id}</div>
+    <div class="tile-op">${st.op}</div>
+    <div class="tile-rows">
+      <div class="tile-row">
+        <span class="k">Cycle</span>
+        <span class="v">${st.cycle.toFixed(1)}<span class="unit">s</span></span>
+      </div>
+      <div class="tile-row">
+        <span class="k">G / B</span>
+        <span class="v"><span class="good">${st.good}</span><span class="slash">/</span><span class="bad">${st.bad}</span></span>
+      </div>
+    </div>
+    <div class="tile-status ${stt.cls}">${stt.short}</div>
+  `;
+  wrap.appendChild(tile);
+}
+
+function refreshLineHeader(lineKey){
+  const k = computeLineKpi(lineKey);
+  const card = document.querySelector(`[data-line="${lineKey}"]`);
+  if (!card) return;
+
+  card.classList.remove('h-operational','h-degraded','h-critical');
+  card.classList.add(`h-${k.health}`);
+
+  const kpis = card.querySelector(`[data-kpis="${lineKey}"]`);
+  kpis.querySelector('[data-k="producing"]').textContent   = k.producing;
+  kpis.querySelector('[data-k="disturbance"]').textContent = k.disturbance;
+  kpis.querySelector('[data-k="waiting"]').textContent     = k.waiting;
+  kpis.querySelector('[data-k="off"]').textContent         = k.off;
+
+  const sCard = card.querySelector(`[data-status-card="${lineKey}"]`);
+  sCard.querySelector('[data-status-label]').textContent = HEALTH_LABEL[k.health];
+}
+
+function renderLegend(){
+  const strip = document.getElementById('legend-strip');
+  strip.querySelectorAll('.leg').forEach(n => n.remove());
+  const counts = {};
+  STATUSES.forEach(s => counts[s.key] = 0);
+  STATIONS.forEach(s => counts[s.status]++);
+  STATUSES.forEach(s => {
+    const el = document.createElement('div');
+    el.className = 'leg';
+    el.innerHTML = `
+      <span class="dot" style="background:var(--c-${s.key})"></span>
+      <span class="num">${counts[s.key]}</span>
+      <span class="name">${s.label}</span>
+    `;
+    strip.appendChild(el);
+  });
+}
+
+function renderAMR(){
+  const grid = document.getElementById('amr-grid');
+  const ft = amrTypeMS.getValues();
+  const fs = amrStateMS.getValues();
+  grid.innerHTML = '';
+  let active = 0, visible = 0;
+  FLEET.forEach(v => {
+    if (ft && !ft.includes(v.type))  return;
+    if (fs && !fs.includes(v.state)) return;
+    visible++;
+    const stCls =
+      v.state === 'active'   ? 's-active' :
+      v.state === 'charging' ? 's-charge' :
+      v.state === 'fault'    ? 's-fault'  : 's-idle';
+    if (v.state === 'active') active++;
+    const card = document.createElement('div');
+    card.className = `amr-card ${stCls}`;
+    card.innerHTML = `
+      <div class="amr-head">
+        <div class="name">${v.id}</div>
+        <div class="typ">${v.type}</div>
+      </div>
+      <div class="amr-rows">
+        <div class="amr-row"><span class="k">Task</span><span class="v">${v.task}</span></div>
+        <div class="amr-row"><span class="k">Location</span><span class="v">${v.loc}</span></div>
+        <div class="amr-row"><span class="k">Speed</span><span class="v">${v.speed.toFixed(1)} m/s</span></div>
+        <div class="amr-row"><span class="k">Payload</span><span class="v">${v.payload}</span></div>
+      </div>
+      <div class="battery-row">
+        <div class="top"><span>Battery</span><strong>${v.battery}%</strong></div>
+        <div class="battery ${v.battery < 30 ? 'low' : ''}"><span style="width:${v.battery}%"></span></div>
+      </div>
+      <div class="amr-foot">
+        <span>Status</span>
+        <span class="state">${v.state.toUpperCase()}</span>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+  document.getElementById('fleet-health').textContent =
+    `${Math.round((active / Math.max(visible,1)) * 100)}%`;
+}
+
+/* ============================================================
+   FILTERS + COUNTS
+   ============================================================ */
+function applyFilters(){
+  const lines    = lineMS.getValues();
+  const stations = stationMS.getValues();
+  const statuses = statusMS.getValues();
+
+  document.querySelectorAll('.line-card').forEach(sec => {
+    sec.classList.toggle('hidden', lines && !lines.includes(sec.dataset.line));
+  });
+
+  document.querySelectorAll('.tile').forEach(t => {
+    const m1 = !stations || stations.includes(t.dataset.station);
+    const m2 = !statuses || statuses.includes(t.dataset.statusKey);
+    t.classList.toggle('dim', !(m1 && m2));
+  });
+
+  recomputeCounts();
+}
+
+function recomputeCounts(){
+  let inCycle = 0, offCycle = 0;
+  STATIONS.forEach(s => statusByKey(s.status).off ? offCycle++ : inCycle++);
+  document.getElementById('c-in').textContent  = inCycle;
+  document.getElementById('c-off').textContent = offCycle;
+  document.getElementById('c-tot').textContent = STATIONS.length;
+  LINES.forEach(l => refreshLineHeader(l.key));
+  renderLegend();
+}
+
+/* ============================================================
+   STATION OPTIONS REBUILD
+   ============================================================ */
+function buildStationOptions(lineFilter){
+  const list = [];
+  const linesToShow = lineFilter ? LINES.filter(l => lineFilter.includes(l.key)) : LINES;
+  linesToShow.forEach(line => {
+    LINE_STATIONS[line.key].forEach(s => {
+      list.push({ value: s.id, label: `${s.id} — ${s.name}`, group: line.name });
+    });
+  });
+  return list;
+}
+
+/* ============================================================
+   LIVE TICK
+   ============================================================ */
+function tickUptimes(){
+  const now = Date.now();
+  LINES.forEach(line => {
+    const el = document.querySelector(`[data-uptime="${line.key}"]`);
+    if (el) el.textContent = fmtUptime(now - line.uptimeStart);
+  });
+  document.getElementById('last-update').textContent = fmtClockHM(new Date());
+}
+
+function liveProductionTick(){
+  STATIONS.forEach(s => {
+    if (s.status === 'producing' && Math.random() < 0.18) {
+      s.good += 1;
+      s.cycle = rand(30, 58) + Math.random();
+      const tile = document.querySelector(`[data-uid="${s.uid}"]`);
+      if (tile) {
+        const rows = tile.querySelectorAll('.tile-row .v');
+        rows[0].innerHTML = `${s.cycle.toFixed(1)}<span class="unit">s</span>`;
+        rows[1].innerHTML = `<span class="good">${s.good}</span><span class="slash">/</span><span class="bad">${s.bad}</span>`;
+      }
+    }
+  });
+
+  /* occasionally flip ONE non-critical station to keep it lively */
+  if (Math.random() < 0.12) {
+    const candidates = STATIONS.filter(s => ['producing','starved','blocked','dressing'].includes(s.status));
+    const pick = candidates[rand(0, candidates.length - 1)];
+    const choices = ['producing','producing','producing','starved','blocked','dressing'];
+    pick.status = choices[rand(0, choices.length - 1)];
+    const tile = document.querySelector(`[data-uid="${pick.uid}"]`);
+    if (tile) {
+      const stt = statusByKey(pick.status);
+      tile.dataset.statusKey = pick.status;
+      tile.classList.toggle('live', pick.status === 'producing');
+      const bar = tile.querySelector('.tile-status');
+      bar.className = `tile-status ${stt.cls}`;
+      bar.textContent = stt.short;
+    }
+  }
+
+  recomputeCounts();
+  applyFilters();
+}
+
+function liveFleetTick(){
+  FLEET.forEach(v => {
+    if (v.state === 'active') {
+      v.battery = Math.max(0, v.battery - (Math.random() < 0.4 ? 1 : 0));
+      if (v.battery < 20 && Math.random() < 0.5) v.state = 'charging';
+    } else if (v.state === 'charging') {
+      v.battery = Math.min(100, v.battery + (Math.random() < 0.6 ? 1 : 0));
+      if (v.battery > 90 && Math.random() < 0.3) {
+        v.state = 'active';
+        v.task = ['TRAY → CELL','CELL → PACK','PACK → DOCK','PALLET MOVE'][rand(0,3)];
+      }
+    }
+  });
+  if (!document.getElementById('view-amr').classList.contains('hidden')) renderAMR();
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+let lineMS, stationMS, statusMS, amrTypeMS, amrStateMS;
+
+function init(){
+  renderLines();
+  renderLegend();
+
+  /* Build multi-selects */
+  lineMS = makeMultiSelect(document.getElementById('ms-line'), {
+    allLabel: 'All Lines',
+    options: LINES.map(l => ({ value: l.key, label: l.name })),
+    onChange: (vals) => {
+      stationMS.setOptions(buildStationOptions(vals));
+      applyFilters();
+    }
+  });
+
+  stationMS = makeMultiSelect(document.getElementById('ms-station'), {
+    allLabel: 'All Stations',
+    options: buildStationOptions(null),
+    onChange: applyFilters
+  });
+
+  statusMS = makeMultiSelect(document.getElementById('ms-status'), {
+    allLabel: 'All Statuses',
+    showSwatch: true,
+    options: STATUSES.map(s => ({
+      value: s.key, label: s.label,
+      swatch: getComputedStyle(document.documentElement).getPropertyValue(`--c-${s.key}`).trim() || '#000'
+    })),
+    onChange: applyFilters
+  });
+
+  amrTypeMS = makeMultiSelect(document.getElementById('ms-amr-type'), {
+    allLabel: 'All Vehicles',
+    options: [
+      { value:'AMR',      label:'AMR (Autonomous Mobile Robot)' },
+      { value:'AGV',      label:'AGV (Auto Guided Vehicle)' },
+      { value:'Forklift', label:'Auto Forklift' }
+    ],
+    onChange: renderAMR
+  });
+
+  amrStateMS = makeMultiSelect(document.getElementById('ms-amr-state'), {
+    allLabel: 'All States',
+    options: [
+      { value:'active',   label:'Active' },
+      { value:'idle',     label:'Idle' },
+      { value:'charging', label:'Charging' },
+      { value:'fault',    label:'Fault' }
+    ],
+    onChange: renderAMR
+  });
+
+  recomputeCounts();
+  renderAMR();
+  tickUptimes();
+
+  document.querySelectorAll('.switcher button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.switcher button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const v = btn.dataset.view;
+      document.getElementById('view-lines').classList.toggle('hidden', v !== 'lines');
+      document.getElementById('view-amr').classList.toggle('hidden',   v !== 'amr');
+    });
+  });
+
+  setInterval(tickUptimes,        1000);
+  setInterval(liveProductionTick, 1500);
+  setInterval(liveFleetTick,      2000);
+}
+init();
+</script>
+</body>
+</html>
