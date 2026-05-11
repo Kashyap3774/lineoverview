@@ -403,46 +403,79 @@
   @media (max-width: 720px)  { .tiles { grid-template-columns: repeat(2, 1fr); } }
 
   /* ============================================================
-     STATION TILE (flatter, cleaner)
+     STATION TILE — high-visibility andon style
+     The status color is the tile, not a label on it. Visible from 15+ ft.
      ============================================================ */
   .tile {
-    background: var(--panel);
-    border: 1px solid var(--line);
+    --tile-color: var(--line-2);          /* set per-status below */
+    --tile-tint:  rgba(0,0,0,0);          /* set per-status below */
+    background: var(--tile-tint);
+    border: 3px solid var(--tile-color);
     border-radius: var(--radius-sm);
     overflow: hidden;
-    transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+    transition: transform .15s ease, box-shadow .15s ease;
     position: relative;
   }
-  .tile:hover {
-    transform: translateY(-1px);
-    border-color: var(--line-2);
-    box-shadow: 0 4px 12px -4px rgba(15,23,42,.08);
+  /* Top andon-light band — same color as border */
+  .tile::before {
+    content: '';
+    display: block;
+    height: 7px;
+    background: var(--tile-color);
   }
-  .tile.dim { opacity: .25; pointer-events: none; }
+  .tile:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px -4px rgba(15,23,42,.18);
+  }
+  .tile.dim { opacity: .22; pointer-events: none; filter: saturate(.4); }
 
+  /* ----- per-status color binding ----- */
+  .tile-producing { --tile-color: var(--c-producing); --tile-tint: #f0fdf4; }
+  .tile-tech      { --tile-color: var(--c-tech);      --tile-tint: #fef2f2; }
+  .tile-blocked   { --tile-color: var(--c-blocked);   --tile-tint: #fffbeb; }
+  .tile-starved   { --tile-color: var(--c-starved);   --tile-tint: #eff6ff; }
+  .tile-indirect  { --tile-color: var(--c-indirect);  --tile-tint: #fff7ed; }
+  .tile-dressing  { --tile-color: var(--c-dressing);  --tile-tint: #fdf2f8; }
+  .tile-manual    { --tile-color: var(--c-manual);    --tile-tint: #f1f5f9; }
+  .tile-off       { --tile-color: var(--c-off);       --tile-tint: #f1f5f9; }
+  .tile-missing   { --tile-color: var(--c-missing);   --tile-tint: #ecfeff; }
+
+  /* ----- attention glow on problem states only ----- */
+  .tile-tech, .tile-indirect, .tile-missing {
+    animation: tile-alert 1.8s ease-in-out infinite;
+  }
+  @keyframes tile-alert {
+    0%, 100% { box-shadow: 0 0 0 0 var(--tile-color); }
+    50%      { box-shadow: 0 0 14px 1px var(--tile-color); }
+  }
+
+  /* ----- bigger station ID so it reads from a distance ----- */
   .tile-id {
     text-align: center;
     font-family: "Space Mono", monospace;
-    font-weight: 700; font-size: 15px;
+    font-weight: 700; font-size: 18px;
     letter-spacing: .04em;
-    padding: 11px 8px 0;
+    padding: 10px 8px 0;
     color: var(--ink);
   }
   .tile-op {
     text-align: center;
     font-family: "JetBrains Mono", monospace;
-    font-size: 9px; color: var(--ink-3);
+    font-size: 9.5px; color: var(--ink-3);
     letter-spacing: .04em;
-    padding: 2px 8px 9px;
+    padding: 3px 8px 10px;
   }
-  .tile-rows { border-top: 1px solid var(--line-soft); }
+  .tile-rows {
+    border-top: 1px solid rgba(15,23,42,.06);
+    background: rgba(255,255,255,.6);
+  }
   .tile-row {
     display: flex; justify-content: space-between; align-items: baseline;
-    padding: 5px 12px;
+    padding: 6px 12px;
     font-family: "JetBrains Mono", monospace;
     font-size: 10px;
   }
-  .tile-row + .tile-row { border-top: 1px solid var(--line-soft); }
+  .tile-row + .tile-row { border-top: 1px solid rgba(15,23,42,.06); }
   .tile-row .k {
     color: var(--ink-3);
     letter-spacing: .12em;
@@ -450,7 +483,7 @@
   }
   .tile-row .v {
     font-family: "Space Mono", monospace;
-    font-size: 11px; font-weight: 700; color: var(--ink);
+    font-size: 12px; font-weight: 700; color: var(--ink);
   }
   .tile-row .v .unit {
     font-family: "JetBrains Mono", monospace;
@@ -460,11 +493,12 @@
   .tile-row .v .bad   { color: var(--c-tech); }
   .tile-row .v .slash { color: var(--ink-4); margin: 0 3px; font-weight: 400; }
 
+  /* ----- bottom status strip — also bumped for readability ----- */
   .tile-status {
-    padding: 7px 6px;
+    padding: 9px 6px;
     color: #fff;
     font-family: "JetBrains Mono", monospace;
-    font-size: 10px; font-weight: 700;
+    font-size: 11px; font-weight: 700;
     letter-spacing: .22em;
     text-align: center;
     text-transform: uppercase;
@@ -480,18 +514,6 @@
   .st-off       { background: var(--c-off); }
   .st-missing   { background: var(--c-missing); }
 
-  .tile.live::before {
-    content: ''; position: absolute; top: 9px; right: 9px;
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--c-producing);
-    box-shadow: 0 0 0 0 rgba(34,197,94,.6);
-    animation: pulse-live 1.6s infinite;
-  }
-  @keyframes pulse-live {
-    0%   { box-shadow: 0 0 0 0 rgba(34,197,94,.55); }
-    70%  { box-shadow: 0 0 0 7px rgba(34,197,94,0); }
-    100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
-  }
 
   /* ============================================================
      AMR / AGV
@@ -958,7 +980,7 @@ function renderLines(){
 function renderTile(wrap, st){
   const stt = statusByKey(st.status);
   const tile = document.createElement('div');
-  tile.className = `tile${st.status === 'producing' ? ' live' : ''}`;
+  tile.className = `tile tile-${st.status}`;
   tile.dataset.uid = st.uid;
   tile.dataset.station = st.id;
   tile.dataset.line = st.line;
@@ -1142,7 +1164,8 @@ function liveProductionTick(){
     if (tile) {
       const stt = statusByKey(pick.status);
       tile.dataset.statusKey = pick.status;
-      tile.classList.toggle('live', pick.status === 'producing');
+      /* swap tile-{old} for tile-{new} on root so border + top band + tint update */
+      tile.className = `tile tile-${pick.status}${tile.classList.contains('dim') ? ' dim' : ''}`;
       const bar = tile.querySelector('.tile-status');
       bar.className = `tile-status ${stt.cls}`;
       bar.textContent = stt.short;
